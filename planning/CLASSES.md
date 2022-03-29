@@ -53,56 +53,59 @@ File Structure:
 ```
 .
 └── mastery-week-05/
-├── .idea
-├── dont-wreck-my-house-data/
-│   ├── production/
-│   │   ├── reservations
-│   │   ├── guests
-│   │   └── hosts
-│   └── test/
-│       ├── reservations-seed
-│       └── reservations-test
-├── planning
-└── src/
-├── main/
-│   ├── java/
-│   │   ├── myhouse/
-│   │   │   ├── data/
-│   │   │   │   ├── DataAccessException.java
-│   │   │   │   ├── ReservationFileRepository.java
-│   │   │   │   ├── ReservationRepository.java
-│   │   │   │   ├── HostFileRepository
-│   │   │   │   ├── HostRepository
-│   │   │   │   ├── GuestFileRepository
-│   │   │   │   └── GuestRepository
-│   │   │   ├── domain/
-│   │   │   │   ├── ReservationService
-│   │   │   │   ├── HostService
-│   │   │   │   ├── GuestService
-│   │   │   │   └── Result
-│   │   │   ├── models/
-│   │   │   │   ├── Reservation
-│   │   │   │   ├── Host
-│   │   │   │   └── Guest
-│   │   │   └── ui/
-│   │   │       ├── MenuOptions
-│   │   │       ├── View
-│   │   │       ├── Controller
-│   │   │       ├── ConsoleIo
-│   │   │       └── TextIo
-│   │   └── app.java
-│   └── resources
-└── test/
-└── java/
-├── data/
-│   ├── ReservationFileReposotoryTest
-│   ├── HostFileRepositoryTest
-│   ├── GuestFileRepositoryTest
-│   ├── ReservationFileReposotoryDouble
-│   ├── HostFileRepositoryDouble
-│   └── GuestFileRepositoryDouble
-└── domain/
-├── ReservationServiceTest
-├── HostServiceTest
-└── GuestServiceTest
+    ├── .idea
+    ├── dont-wreck-my-house-data/
+    │   ├── production/
+    │   │   ├── reservations
+    │   │   ├── guests
+    │   │   └── hosts
+    │   └── test/
+    │       ├── reservations-seed
+    │       └── reservations-test
+    ├── planning/
+    │   ├── README.md
+    │   ├── TASKLIST.md
+    │   └── CLASSES.md
+    └── src/
+        ├── main/
+        │   ├── java/
+        │   │   ├── myhouse/
+        │   │   │   ├── data/
+        │   │   │   │   ├── DataAccessException
+        │   │   │   │   ├── ReservationFileRepository
+        │   │   │   │   ├── ReservationRepository
+        │   │   │   │   ├── HostFileRepository
+        │   │   │   │   ├── HostRepository
+        │   │   │   │   ├── GuestFileRepository
+        │   │   │   │   └── GuestRepository
+        │   │   │   ├── domain/
+        │   │   │   │   ├── ReservationService
+        │   │   │   │   ├── HostService
+        │   │   │   │   ├── GuestService
+        │   │   │   │   └── Result
+        │   │   │   ├── models/
+        │   │   │   │   ├── Reservation
+        │   │   │   │   ├── Host
+        │   │   │   │   └── Guest
+        │   │   │   └── ui/
+        │   │   │       ├── MenuOptions
+        │   │   │       ├── View
+        │   │   │       ├── Controller
+        │   │   │       ├── ConsoleIo
+        │   │   │       └── TextIo
+        │   │   └── app.java
+        │   └── resources
+        └── test/
+            └── java/
+                ├── data/
+                │   ├── ReservationFileReposotoryTest
+                │   ├── HostFileRepositoryTest
+                │   ├── GuestFileRepositoryTest
+                │   ├── ReservationFileReposotoryDouble
+                │   ├── HostFileRepositoryDouble
+                │   └── GuestFileRepositoryDouble
+                └── domain/
+                    ├── ReservationServiceTest
+                    ├── HostServiceTest
+                    └── GuestServiceTest
 ```

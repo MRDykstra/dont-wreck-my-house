@@ -61,3 +61,4 @@
          4. [ ] chooseReservations()
          5. [ ] confirmation()
          6. [ ] displayResult()
+

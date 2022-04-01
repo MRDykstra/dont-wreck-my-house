@@ -6,30 +6,40 @@ import java.util.UUID;
 
 public class Reservation {
 
-    UUID hostId;
+    Host host;
     int reservationId;
     LocalDate startDate;
     LocalDate endDate;
-    int guestId;
+    Guest guest;
     BigDecimal total;
+    boolean cancelled;
 
     public Reservation() {}
 
-    public Reservation(UUID hostId, int reservationId, LocalDate startDate, LocalDate endDate, int guestId, BigDecimal total) {
-        this.hostId = hostId;
+    public Reservation(Host host, int reservationId, LocalDate startDate, LocalDate endDate, Guest guest, BigDecimal total, boolean cancelled) {
+        this.host = host;
         this.reservationId = reservationId;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.guestId = guestId;
+        this.guest = guest;
         this.total = total;
+        this.cancelled = cancelled;
     }
 
-    public UUID getHostId() {
-        return hostId;
+    public Host getHost() {
+        return host;
     }
 
-    public void setHostId(UUID hostId) {
-        this.hostId = hostId;
+    public void setHost(Host host) {
+        this.host = host;
+    }
+
+    public Guest getGuest() {
+        return guest;
+    }
+
+    public void setGuest(Guest guest) {
+        this.guest = guest;
     }
 
     public int getReservationId() {
@@ -56,19 +66,19 @@ public class Reservation {
         this.endDate = endDate;
     }
 
-    public int getGuestId() {
-        return guestId;
-    }
-
-    public void setGuestId(int guestId) {
-        this.guestId = guestId;
-    }
-
     public BigDecimal getTotal() {
         return total;
     }
 
     public void setTotal(BigDecimal total) {
         this.total = total;
+    }
+
+    public boolean isCancelled() {
+        return cancelled;
+    }
+
+    public void setCancelled(boolean cancelled) {
+        this.cancelled = cancelled;
     }
 }

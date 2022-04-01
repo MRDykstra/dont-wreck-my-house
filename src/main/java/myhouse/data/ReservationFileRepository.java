@@ -1,6 +1,10 @@
 package myhouse.data;
 
+import myhouse.models.Guest;
+import myhouse.models.Host;
 import myhouse.models.Reservation;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Repository;
 
 import java.io.*;
 import java.math.BigDecimal;
@@ -9,18 +13,21 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Repository
 public class ReservationFileRepository implements ReservationRepository{
 
     private final String directoryPath;
+    private final HostFileRepository hostRepo;
+    private final GuestFileRepository guestRepo;
 
-    public ReservationFileRepository(String directoryPath) {
+    public ReservationFileRepository(@Value("${reservationFilePath}")String directoryPath, HostFileRepository hostRepo, GuestFileRepository guestRepo) {
         this.directoryPath = directoryPath;
+        this.hostRepo = hostRepo;
+        this.guestRepo = guestRepo;
     }
 
     @Override
@@ -49,6 +56,7 @@ public class ReservationFileRepository implements ReservationRepository{
             if (file.getName().endsWith(ext)) {
                 fileName = file.getName().substring(0, file.getName().length() - ext.length());
         }
+            Host host = hostRepo.findHostById(UUID.fromString(fileName));
 
             try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                 reader.readLine();
@@ -56,13 +64,15 @@ public class ReservationFileRepository implements ReservationRepository{
                     String[] fields = line.split(",", -1);
                     if (fields.length == 5) {
                         Reservation reservation = new Reservation();
-                        reservation.setHostId(UUID.fromString(fileName));
+                        reservation.setHost(host);
                         reservation.setReservationId(Integer.parseInt(fields[0]));
                         reservation.setStartDate(LocalDate.parse(fields[1], DateTimeFormatter.ofPattern("yyyy-MM-dd")));
                         reservation.setEndDate(LocalDate.parse(fields[2], DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-                        reservation.setGuestId(Integer.parseInt(fields[3]));
+                        Guest guest = guestRepo.findById(Integer.parseInt(fields[3]));
+                        reservation.setGuest(guest);
                         BigDecimal total = new BigDecimal(String.valueOf(fields[4]));
                         reservation.setTotal(total);
+                        reservation.setCancelled(false);
                         result.add(reservation);
                     }
                 }
@@ -79,29 +89,85 @@ public class ReservationFileRepository implements ReservationRepository{
     }
 
     @Override
-    public List<Reservation> findReservationsByHost(int hostId) throws DataAccessException {
-        List<Reservation> result = new ArrayList<>();
+    public List<Reservation> findReservationsByHost(UUID hostId, boolean displayExpired) throws DataAccessException {
         List<File> files = createListOfReservations();
+        List<Reservation> all = findAll(files);
+        List<Reservation> result = new ArrayList<>();
 
-        result = findAll(files).stream()
-                .filter(f -> f.getHostId().equals(hostId))
-                .collect(Collectors.toList());
+        for (Reservation res : all) {
+            if (res.getHost().getHostId().toString().equals(hostId.toString())) {
+                result.add(res);
+            }
+        }
 
-        return result;
+        if (!displayExpired) {
+            return result.stream()
+                    .filter(peep -> peep.getEndDate().isAfter(LocalDate.now()))
+                    .sorted(Comparator.comparing(Reservation::getStartDate))
+                    .collect(Collectors.toList());
+        } else {
+            return result.stream()
+                    .sorted(Comparator.comparing(Reservation::getStartDate))
+                    .collect(Collectors.toList());
+        }
     }
 
     @Override
-    public ReservationRepository findById(UUID reservationId) throws DataAccessException {
-        return null;
-    }
+    public boolean saveReservation(Reservation reservation) throws DataAccessException {
 
-    @Override
-    public Reservation makeReservation(Reservation reservation) throws DataAccessException {
-        return null;
+        int id = 0;
+        String filePath = "";
+        boolean create = false;
+        String header = "";
+
+        id = getNextId(findReservationsByHost(reservation.getHost().getHostId(), false));
+
+        List<File> files = createListOfReservations();
+        reservation.setReservationId(id);
+
+        for (File f : files) {
+            if (f.getName().equals(reservation.getHost().getHostId().toString() + ".csv")){
+                filePath = f.getPath();
+            }
+        }
+
+        if (filePath.isBlank()) {
+            filePath = directoryPath + reservation.getHost().getHostId().toString() + ".csv";
+            create = true;
+        }
+
+        try(FileWriter fw = new FileWriter(filePath, true);
+            BufferedWriter bw = new BufferedWriter(fw)) {
+            if (create) {
+                bw.write("id,start_date,end_date,guest_id,total");
+                bw.newLine();
+            }
+            bw.write(serialize(reservation));
+            bw.newLine();
+            return true;
+
+        } catch (FileNotFoundException ex) {
+
+        } catch (IOException ex) {
+            throw new DataAccessException(ex.getMessage(), ex);
+        }
+
+        return false;
     }
 
     @Override
     public boolean updateReservation(Reservation reservation) throws DataAccessException {
+        List<Reservation> reservationList = findReservationsByHost(UUID.fromString(reservation.getHost().getHostId().toString()), false);
+
+
+        for (int i = 0; i < reservationList.size(); i++) {
+            if (reservationList.get(i).getReservationId() == reservation.getReservationId()) {
+                reservationList.set(i, reservation);
+                writeAll(reservationList);
+                return true;
+            }
+        }
+
         return false;
     }
 
@@ -110,8 +176,38 @@ public class ReservationFileRepository implements ReservationRepository{
         return false;
     }
 
-    @Override
-    public void saveReservation(Reservation reservation) {
+    private void writeAll(List<Reservation> reservations) throws DataAccessException {
+        String filePath = directoryPath + reservations.get(0).getHost().getHostId().toString() + ".csv";
 
+        try (PrintWriter writer = new PrintWriter(filePath)) {
+            writer.println("id,start_date,end_date,guest_id,total");
+            for (Reservation res : reservations) {
+                writer.println(serialize(res));
+            }
+        } catch (IOException ex) {
+            throw new DataAccessException(ex.getMessage(), ex);
+
+        }
+
+    }
+
+    private String serialize(Reservation reservation) {
+        return String.format("%s,%s,%s,%s,%s",
+                reservation.getReservationId(),
+                reservation.getStartDate(),
+                reservation.getEndDate(),
+                reservation.getGuest().getGuestId(),
+                reservation.getTotal()
+        );
+    }
+
+    private int getNextId(List<Reservation> reservationList) {
+        int maxId = 0;
+        for (Reservation res : reservationList) {
+            if (maxId < res.getReservationId()) {
+                maxId = res.getReservationId();
+            }
+        }
+        return maxId + 1;
     }
 }

@@ -13,11 +13,14 @@ public class Host {
     String address;
     String city;
     String state;
-    int postalCode;
+    String postalCode;
     BigDecimal standardRate;
     BigDecimal weekendRate;
 
-    public Host(UUID hostId, String firstName, String lastName, String email, String phone, String address, String city, String state, int postalCode, BigDecimal standardRate, BigDecimal weekendRate) {
+    public Host() {
+    }
+
+    public Host(UUID hostId, String firstName, String lastName, String email, String phone, String address, String city, String state, String postalCode, BigDecimal standardRate, BigDecimal weekendRate) {
         this.hostId = hostId;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -95,11 +98,11 @@ public class Host {
         this.state = state;
     }
 
-    public int getPostalCode() {
+    public String getPostalCode() {
         return postalCode;
     }
 
-    public void setPostalCode(int postalCode) {
+    public void setPostalCode(String postalCode) {
         this.postalCode = postalCode;
     }
 

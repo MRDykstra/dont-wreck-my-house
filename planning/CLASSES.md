@@ -13,6 +13,7 @@
 * Result - Communication of success of validation or of CRUD operations
 
 ### MODELS
+
 * Host 
 - UUID id,
 - String firstName,
@@ -25,6 +26,7 @@
 - String postal_code,
 - BigDecimal standard_rate,
 - BigDecimal weekend_rate
+
 * Guest
 - UUID guestId,
 - String firstName,
@@ -32,12 +34,13 @@
 - String email,
 - String phone,
 - String state
+
 * Reservation
-- UUID hostId,
+- Host,
 - int reservationId,
 - LocalDate startDate,
 - LocalDate endDate,
-- UUID guestId,
+- Guest,
 - BigDecimal total
 
 ### UI

@@ -11,17 +11,13 @@ public interface ReservationRepository {
 
     List<File> createListOfReservations();
 
-    List<Reservation> findReservationsByHost(int hostId) throws DataAccessException;
+    List<Reservation> findReservationsByHost(UUID hostId, boolean current) throws DataAccessException;
 
-    ReservationRepository findById(UUID reservationId) throws DataAccessException;
-
-    Reservation makeReservation(Reservation reservation) throws DataAccessException;
+    boolean saveReservation(Reservation reservation) throws DataAccessException;
 
     boolean updateReservation(Reservation reservation) throws DataAccessException;
 
     boolean deleteById(UUID reservationId) throws DataAccessException;
-
-    void saveReservation(Reservation reservation);
 
 
     List<Reservation> findAll(List<File> files) throws DataAccessException;

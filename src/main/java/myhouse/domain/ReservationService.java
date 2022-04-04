@@ -1,7 +1,6 @@
 package myhouse.domain;
 
 import myhouse.data.DataAccessException;
-import myhouse.data.ReservationFileRepository;
 import myhouse.data.ReservationRepository;
 import myhouse.models.Host;
 import myhouse.models.Reservation;
@@ -9,12 +8,13 @@ import myhouse.models.Result;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 @Service
 public class ReservationService {
+
+    // Reservation Service
 
     private final ReservationRepository repo;
 
@@ -29,12 +29,6 @@ public class ReservationService {
     public List<Reservation> findAllByHost(UUID hostId, boolean displayExpired) throws DataAccessException {
 
         return repo.findReservationsByHost(hostId, displayExpired);
-    }
-
-    public Result validateReservation(Reservation reservation) {
-        Result result = new Result();
-
-        return result;
     }
 
     public Result validateReservationDates(LocalDate start, LocalDate end, Host host, int reservationId) throws DataAccessException {
@@ -111,12 +105,6 @@ public class ReservationService {
         if (!repo.updateReservation(res)) {
             result.addErrorMessage("Could not update reservation. PLease try again.");
         }
-
-        return result;
-    }
-
-    public Result deleteReservation(Reservation res) throws DataAccessException {
-        Result result = new Result();
 
         return result;
     }

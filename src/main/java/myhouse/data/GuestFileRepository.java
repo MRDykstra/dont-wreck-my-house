@@ -20,7 +20,7 @@ public class GuestFileRepository implements GuestRepository {
 
     private final String filePath;
 
-    public GuestFileRepository(@Value("${guestFilePath}")String filePath) {
+    public GuestFileRepository(@Value("${guestFilePath}") String filePath) {
         this.filePath = filePath;
     }
 

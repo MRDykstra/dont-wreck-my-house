@@ -98,7 +98,7 @@ public class ReservationServiceTest {
        LocalDate start = LocalDate.of(2022, 7, 30);
        LocalDate end = LocalDate.of(2022, 8, 6);
 
-        result = service.validateReservationDates(start, end, host);
+        result = service.validateReservationDates(start, end, host, 0);
 
         assertFalse(result.isSuccessful());
 
@@ -106,7 +106,7 @@ public class ReservationServiceTest {
         start = LocalDate.of(2022, 8, 2);
         end = LocalDate.of(2022, 8, 6);
 
-        result = service.validateReservationDates(start, end, host);
+        result = service.validateReservationDates(start, end, host, 0);
 
         assertFalse(result.isSuccessful());
 
@@ -114,7 +114,7 @@ public class ReservationServiceTest {
         start = LocalDate.of(2022, 8, 2);
         end = LocalDate.of(2022, 8, 5);
 
-        result = service.validateReservationDates(start, end, host);
+        result = service.validateReservationDates(start, end, host, 0);
 
         assertFalse(result.isSuccessful());
 
@@ -122,7 +122,7 @@ public class ReservationServiceTest {
         start = LocalDate.of(2022, 8, 2);
         end = LocalDate.of(2022, 8, 7);
 
-        result = service.validateReservationDates(start, end, host);
+        result = service.validateReservationDates(start, end, host, 0);
 
         assertFalse(result.isSuccessful());
 
@@ -130,7 +130,7 @@ public class ReservationServiceTest {
         start = LocalDate.of(2022, 7, 29);
         end = LocalDate.of(2022, 8, 2);
 
-        result = service.validateReservationDates(start, end, host);
+        result = service.validateReservationDates(start, end, host, 0);
 
         assertFalse(result.isSuccessful());
 
@@ -138,7 +138,7 @@ public class ReservationServiceTest {
         start = LocalDate.of(2022, 7, 29);
         end = LocalDate.of(2022, 8, 6);
 
-        result = service.validateReservationDates(start, end, host);
+        result = service.validateReservationDates(start, end, host, 0);
 
         assertFalse(result.isSuccessful());
     }

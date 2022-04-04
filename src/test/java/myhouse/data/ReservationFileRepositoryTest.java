@@ -153,6 +153,31 @@ class ReservationFileRepositoryTest {
         assertTrue(testFile.delete());
     }
 
+    @Test
+    void shouldUpdateReservation() throws DataAccessException {
+        List<Reservation> filtered = repository.findReservationsByHost(UUID.fromString(
+                        "2e72f86c-b8fe-4265-b4f1-304dea8762db"),
+                true);
+
+        LocalDate newDate = LocalDate.of(2022, 10, 12);
+        Reservation reservation = filtered.get(0);
+        reservation.setStartDate(newDate);
+
+        assertTrue(repository.updateReservation(reservation));
+
+        filtered = repository.findReservationsByHost(UUID.fromString(
+                        "2e72f86c-b8fe-4265-b4f1-304dea8762db"),
+                true);
+
+        assertEquals(newDate, filtered.get(7).getStartDate());
+
+    }
+
+    @Test
+    void shouldDeleteReservation() throws DataAccessException {
+
+    }
+
 
 
 }

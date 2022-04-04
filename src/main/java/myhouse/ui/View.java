@@ -7,7 +7,6 @@ import myhouse.models.Result;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -47,9 +46,9 @@ public class View {
     public String chooseState() {
         String stateAbbreviation = "";
 
-        while (!stateAbbreviation.equalsIgnoreCase("0")) {
+        while (!stateAbbreviation.trim().equalsIgnoreCase("0")) {
             stateAbbreviation = io.readRequiredString("What state would you like to view? (Two letter state abbreviation or 0 to exit): ");
-            if (stateAbbreviation.equalsIgnoreCase("0")) {
+            if (stateAbbreviation.charAt(0) == '0') {
                 break;
             }
             if (stateAbbreviation.length() != 2) {
@@ -79,7 +78,7 @@ public class View {
                     .limit(25)
                     .collect(Collectors.toList());
 
-            int size = displayHosts(display, 14,false);
+            int size = displayHosts(display, 14, false);
 
 
             if (loopCount > 0) {
@@ -108,7 +107,7 @@ public class View {
                 }
             } else if (display.size() <= 25 && choice != 0) {
                 loop = false;
-                Host host = display.get(choice-1);
+                Host host = display.get(choice - 1);
                 hostId = host.getHostId().toString();
                 return hostId;
             } else {
@@ -162,7 +161,7 @@ public class View {
                 }
             } else if (display.size() <= 25 && choice != 0) {
                 loop = false;
-                Guest guest = display.get(choice-1);
+                Guest guest = display.get(choice - 1);
                 guestId = guest.getGuestId();
                 return guestId;
             } else {
@@ -176,15 +175,19 @@ public class View {
 
     public Reservation chooseReservation(List<Reservation> reservations) {
         int index = 0;
-        index = io.readInt("Enter reservation id: ");
+        index = io.readInt("Enter reservation id or 0 to exit: ");
 
         if (index == 0) {
             return null;
         }
 
-        Reservation reservation = reservations.get(index - 1);
+        for (Reservation res : reservations) {
+            if (res.getReservationId() == index) {
+                return res;
+            }
+        }
 
-        return reservation;
+        return null;
     }
 
     public boolean yesOrNo(String message) {
@@ -192,7 +195,7 @@ public class View {
     }
 
     public String formatString(String input, int length) {
-        StringBuilder constructor =new StringBuilder(input);
+        StringBuilder constructor = new StringBuilder(input);
         for (int i = 0; constructor.length() < length; i++) {
             constructor.append(" ");
         }
@@ -260,7 +263,7 @@ public class View {
         emailDisplay = formatString(emailDisplay, 40);
 
         cityDisplay = String.format("%s", host.getCity());
-        cityDisplay = formatString(cityDisplay, 13);
+        cityDisplay = formatString(cityDisplay, 17);
         locationDisplay = String.format("%s %s", cityDisplay, host.getState());
 
         if (displayRate) {
@@ -315,7 +318,7 @@ public class View {
         return result;
     }
 
-    public void displayReservationsByHost(List<Reservation> reservations, boolean displayCancelled) {
+    public void displayReservationsByHost(List<Reservation> reservations) {
         displayHeader("Reservations for Host");
         io.printf("Host Email: %s%n", reservations.get(0).getHost().getEmail());
         displayHeader(String.format("%s | %s, %s",
@@ -325,19 +328,26 @@ public class View {
         ));
 
         for (Reservation res : reservations) {
-            displayReservation(res, displayCancelled);
+            displayReservation(res);
         }
 
     }
 
-    public void displayReservation(Reservation reservation, boolean displayCancelled) {
-        io.print(reservationDisplayFormat(reservation, displayCancelled));
+    public void displayReservation(Reservation reservation) {
+        io.print(reservationDisplayFormat(reservation));
     }
 
-    public String reservationDisplayFormat(Reservation res, boolean displayCancelled) {
+    public String reservationDisplayFormat(Reservation res) {
         String result = "";
-
+        String idDisplay = "";
         String nameDisplay = "";
+        String totalDisplay = "";
+        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+        String startDay = res.getStartDate().getDayOfWeek().getDisplayName(TextStyle.SHORT_STANDALONE, Locale.ENGLISH);
+        String endDay = res.getEndDate().getDayOfWeek().getDisplayName(TextStyle.SHORT_STANDALONE, Locale.ENGLISH);
+
+        idDisplay = String.format("ID: %s.  ", res.getReservationId());
+        idDisplay = formatString(idDisplay, 10);
 
         nameDisplay = String.format("Guest: %s, %s",
                 res.getGuest().getLastName(),
@@ -345,49 +355,32 @@ public class View {
 
         nameDisplay = formatString(nameDisplay, 28);
 
-        if (displayCancelled) {
-            String cancelledDisplay = "";
-            if (res.isCancelled()) {
-                cancelledDisplay = " [CANCELLED] ";
-            }
+        totalDisplay = String.format("Total Cost: $%s", res.getTotal());
+        totalDisplay = formatString(totalDisplay, 22);
 
-            String idDisplay = String.format("ID: %s. %s", res.getReservationId(), cancelledDisplay);
-            idDisplay = formatString(idDisplay, 20);
-
-            result = String.format(idDisplay + "DATES: %s - %s\t | " + nameDisplay + "| GUEST EMAIL: %s%n",
-                    res.getStartDate(),
-                    res.getEndDate(),
-                    res.getGuest().getEmail());
-
-
-        } else {
-            if (!res.isCancelled()) {
-                result = String.format("ID: %s.\t DATES: %s - %s\t | " + nameDisplay + "| GUEST EMAIL: %s%n",
-                        res.getReservationId(),
-                        res.getStartDate(),
-                        res.getEndDate(),
-                        res.getGuest().getEmail());
-            }
-        }
-
-
-
+        result = String.format(idDisplay + nameDisplay + "| DATES: %s, %s - %s, %s  " + totalDisplay + "| GUEST EMAIL: %s%n",
+                startDay,
+                res.getStartDate().format(dateFormat),
+                endDay,
+                res.getEndDate().format(dateFormat),
+                res.getGuest().getEmail());
 
         return result;
     }
 
     public void displayReservationDates(Reservation reservation) {
+
         String startDay = reservation.getStartDate().getDayOfWeek().getDisplayName(TextStyle.SHORT_STANDALONE, Locale.ENGLISH);
         String endDay = reservation.getEndDate().getDayOfWeek().getDisplayName(TextStyle.SHORT_STANDALONE, Locale.ENGLISH);
         String display = "";
 
         display = String.format("Stay Dates: %s, %s - %s, %s%n", startDay, reservation.getStartDate(), endDay, reservation.getEndDate());
 
-        displayHeader(" ".repeat(display.length()));
         io.print(display);
+        io.println("");
     }
 
-    public BigDecimal displayStayCost(Reservation reservation) {
+    public void displayStayCost(Reservation reservation) {
         int weekdayNights = 0;
         int weekendNights = 0;
         long stayLength = 0;
@@ -424,20 +417,38 @@ public class View {
             totalString = String.format("TOTAL: %s Nights for $%s", stayLength, total);
 
             displayHeader(totalString);
-            return total;
         } else {
             io.printf("%s Weekday Nights @ $%s = %s%n", weekdayNights, reservation.getHost().getStandardRate(), weekdayTotal);
             io.printf("%s Weekend Nights @ $%s = %s%n", weekendNights, reservation.getHost().getWeekendRate(), weekendTotal);
             totalString = String.format("TOTAL: %s Nights for $%s", stayLength, total);
 
             displayHeader(totalString);
-            return total;
         }
-
-
     }
 
-    public BigDecimal displayMakeReservationConfirmation (Reservation res) {
+    public BigDecimal calculateStayCost(Reservation reservation) {
+
+        LocalDate start = reservation.getStartDate();
+        LocalDate end = reservation.getEndDate();
+
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (LocalDate date = start; date.isBefore(end); date = date.plusDays(1)) {
+            DayOfWeek day = date.getDayOfWeek();
+
+            if (day == DayOfWeek.FRIDAY || day == DayOfWeek.SATURDAY) {
+                total = total.add(reservation.getHost().getWeekendRate());
+
+            } else {
+                total = total.add(reservation.getHost().getStandardRate());
+
+            }
+        }
+
+        return total;
+    }
+
+    public void displayMakeReservationConfirmation(Reservation res) {
 
         String header = String.format("\tReservation Confirmation\t");
         displayHeader(header);
@@ -448,7 +459,7 @@ public class View {
         displayHost(res.getHost(), 27, true);
 
         displayReservationDates(res);
-        return displayStayCost(res);
+        displayStayCost(res);
 
     }
 
@@ -460,4 +471,5 @@ public class View {
         }
 
     }
+
 }

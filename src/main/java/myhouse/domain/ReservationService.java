@@ -37,19 +37,29 @@ public class ReservationService {
         return result;
     }
 
-    public Result validateReservationDates(LocalDate start, LocalDate end, Host host) throws DataAccessException {
+    public Result validateReservationDates(LocalDate start, LocalDate end, Host host, int reservationId) throws DataAccessException {
         Result result = new Result();
+        boolean update = false;
+        int index = 0;
         List<Reservation> reservationList = findAllByHost(host.getHostId(), false);
 
-        if (start.isBefore(LocalDate.now())) {
-            result.addErrorMessage("Start date cannot be in the past.");
-            return result;
-        }
 
         if (end.isBefore(start) || end.isEqual(start)) {
             result.addErrorMessage("End date must come after start date.");
             return result;
         }
+
+        for (int i = 0; i < reservationList.size(); i++) {
+            if (reservationList.get(i).getReservationId() == reservationId) {
+                update = true;
+                index = i;
+            }
+        }
+
+        if (update) {
+            reservationList.remove(index);
+        }
+
 
         if (reservationList.size() != 0) {
             for (Reservation res : reservationList) {
@@ -95,4 +105,19 @@ public class ReservationService {
         return result;
     }
 
+    public Result updateReservation(Reservation res) throws DataAccessException {
+        Result result = new Result();
+
+        if (!repo.updateReservation(res)) {
+            result.addErrorMessage("Could not update reservation. PLease try again.");
+        }
+
+        return result;
+    }
+
+    public Result deleteReservation(Reservation res) throws DataAccessException {
+        Result result = new Result();
+
+        return result;
+    }
 }

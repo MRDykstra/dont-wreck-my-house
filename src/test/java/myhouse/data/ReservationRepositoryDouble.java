@@ -113,11 +113,6 @@ public class ReservationRepositoryDouble implements ReservationRepository {
     }
 
     @Override
-    public boolean deleteById(UUID reservationId) throws DataAccessException {
-        return false;
-    }
-
-    @Override
     public boolean saveReservation(Reservation reservation) {
         res.add(reservation);
 

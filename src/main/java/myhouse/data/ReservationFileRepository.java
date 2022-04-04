@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.io.*;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,13 +19,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Repository
-public class ReservationFileRepository implements ReservationRepository{
+public class ReservationFileRepository implements ReservationRepository {
 
     private final String directoryPath;
     private final HostFileRepository hostRepo;
     private final GuestFileRepository guestRepo;
 
-    public ReservationFileRepository(@Value("${reservationFilePath}")String directoryPath, HostFileRepository hostRepo, GuestFileRepository guestRepo) {
+    public ReservationFileRepository(@Value("${reservationFilePath}") String directoryPath, HostFileRepository hostRepo, GuestFileRepository guestRepo) {
         this.directoryPath = directoryPath;
         this.hostRepo = hostRepo;
         this.guestRepo = guestRepo;
@@ -55,7 +56,7 @@ public class ReservationFileRepository implements ReservationRepository{
 
             if (file.getName().endsWith(ext)) {
                 fileName = file.getName().substring(0, file.getName().length() - ext.length());
-        }
+            }
             Host host = hostRepo.findHostById(UUID.fromString(fileName));
 
             try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
@@ -70,7 +71,7 @@ public class ReservationFileRepository implements ReservationRepository{
                         reservation.setEndDate(LocalDate.parse(fields[2], DateTimeFormatter.ofPattern("yyyy-MM-dd")));
                         Guest guest = guestRepo.findById(Integer.parseInt(fields[3]));
                         reservation.setGuest(guest);
-                        BigDecimal total = new BigDecimal(String.valueOf(fields[4]));
+                        BigDecimal total = new BigDecimal(String.valueOf(fields[4])).setScale(2, RoundingMode.HALF_EVEN);
                         reservation.setTotal(total);
                         reservation.setCancelled(false);
                         result.add(reservation);
@@ -126,7 +127,7 @@ public class ReservationFileRepository implements ReservationRepository{
         reservation.setReservationId(id);
 
         for (File f : files) {
-            if (f.getName().equals(reservation.getHost().getHostId().toString() + ".csv")){
+            if (f.getName().equals(reservation.getHost().getHostId().toString() + ".csv")) {
                 filePath = f.getPath();
             }
         }
@@ -136,8 +137,8 @@ public class ReservationFileRepository implements ReservationRepository{
             create = true;
         }
 
-        try(FileWriter fw = new FileWriter(filePath, true);
-            BufferedWriter bw = new BufferedWriter(fw)) {
+        try (FileWriter fw = new FileWriter(filePath, true);
+             BufferedWriter bw = new BufferedWriter(fw)) {
             if (create) {
                 bw.write("id,start_date,end_date,guest_id,total");
                 bw.newLine();
@@ -171,19 +172,22 @@ public class ReservationFileRepository implements ReservationRepository{
         return false;
     }
 
-    @Override
-    public boolean deleteById(UUID reservationId) throws DataAccessException {
-        return false;
-    }
-
     private void writeAll(List<Reservation> reservations) throws DataAccessException {
         String filePath = directoryPath + reservations.get(0).getHost().getHostId().toString() + ".csv";
 
+        List<Reservation> printSort = reservations.stream()
+                .sorted(Comparator.comparing(Reservation::getReservationId))
+                .collect(Collectors.toList());
+
+
         try (PrintWriter writer = new PrintWriter(filePath)) {
             writer.println("id,start_date,end_date,guest_id,total");
-            for (Reservation res : reservations) {
+            for (Reservation res : printSort) {
+                if(!res.isCancelled()) {
                 writer.println(serialize(res));
+                }
             }
+
         } catch (IOException ex) {
             throw new DataAccessException(ex.getMessage(), ex);
 
@@ -202,12 +206,30 @@ public class ReservationFileRepository implements ReservationRepository{
     }
 
     private int getNextId(List<Reservation> reservationList) {
-        int maxId = 0;
+        int nextId = 0;
+        int[] idValues = new int[reservationList.size()];
+        int missingValue = 0;
+
+        for (int i = 0; i < reservationList.size(); i++) {
+            idValues[i] = reservationList.get(i).getReservationId();
+        }
+
+        nextId = reservationList.size() * (reservationList.size() + 1) / 2;
+
+        for (int i = 0; i < idValues.length; i++) {
+            nextId -= idValues[i];
+        }
+
+        if (missingValue != 0) {
+            return nextId;
+        }
+
+
         for (Reservation res : reservationList) {
-            if (maxId < res.getReservationId()) {
-                maxId = res.getReservationId();
+            if (nextId < res.getReservationId()) {
+                nextId = res.getReservationId();
             }
         }
-        return maxId + 1;
+        return nextId + 1;
     }
 }

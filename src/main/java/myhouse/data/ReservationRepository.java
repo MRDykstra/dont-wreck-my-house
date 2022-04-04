@@ -17,8 +17,5 @@ public interface ReservationRepository {
 
     boolean updateReservation(Reservation reservation) throws DataAccessException;
 
-    boolean deleteById(UUID reservationId) throws DataAccessException;
-
-
     List<Reservation> findAll(List<File> files) throws DataAccessException;
 }

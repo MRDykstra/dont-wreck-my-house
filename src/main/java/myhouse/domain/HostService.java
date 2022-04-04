@@ -4,6 +4,7 @@ import myhouse.data.DataAccessException;
 import myhouse.data.HostRepository;
 import myhouse.models.Host;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -21,7 +22,7 @@ public class HostService {
         return repo.findAll();
     }
 
-    public List<Host> findHostsByState (String state) throws DataAccessException {
+    public List<Host> findHostsByState(String state) throws DataAccessException {
         return repo.findAllByState(state);
     }
 

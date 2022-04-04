@@ -37,27 +37,30 @@ public class Controller {
             option = view.mainMenu();
             switch (option) {
                 case VIEW_RESERVATIONS:
-                    viewReservationsByState(false);
+                    viewReservationsByState();
                     view.enterToContinue();
                     break;
                 case MAKE_RESERVATION:
                     makeReservation();
                     break;
                 case EDIT_RESERVATION:
-                    view.displayHeader("Doesn't Exist");
+                    updateReservation();
                     break;
                 case CANCEL_RESERVATION:
-                    view.displayHeader("Doesn't Exist");
+                    cancelReservation();
                     break;
             }
         } while (option != MenuOptions.EXIT);
     }
 
-    public List<Reservation> viewReservationsByState(boolean displayCancelled) throws DataAccessException {
+    public List<Reservation> viewReservationsByState() throws DataAccessException {
 
         boolean loop = true;
         while (loop) {
             String state = view.chooseState();
+            if (state.equalsIgnoreCase("0")) {
+                break;
+            }
             List<Host> hostList = hostService.findHostsByState(state);
 
             if (hostList == null || hostList.isEmpty()) {
@@ -80,7 +83,7 @@ public class Controller {
             if (reservations.size() == 0) {
                 view.printLine("That host has no reservations currently.");
             } else {
-                view.displayReservationsByHost(reservations, displayCancelled);
+                view.displayReservationsByHost(reservations);
                 return reservations;
             }
 
@@ -141,7 +144,7 @@ public class Controller {
                 if (reservationList.size() == 0) {
                     view.printLine("Host has no current reservations.");
                 } else {
-                    view.displayReservationsByHost(reservationList, false);
+                    view.displayReservationsByHost(reservationList);
                 }
 
                 boolean choosingStart = true;
@@ -157,7 +160,7 @@ public class Controller {
 
                 endDate = view.chooseDate("Enter reservation end date [MM/DD/YYYY]: ");
 
-                result = reservationService.validateReservationDates(startDate, endDate, host);
+                result = reservationService.validateReservationDates(startDate, endDate, host, 0);
                 if (!result.isSuccessful()) {
                     view.displayErrorMessages(result);
                     continue;
@@ -169,7 +172,8 @@ public class Controller {
             toSave.setStartDate(startDate);
             toSave.setEndDate(endDate);
 
-            total = view.displayMakeReservationConfirmation(toSave);
+            total = view.calculateStayCost(toSave);
+            view.displayMakeReservationConfirmation(toSave);
 
             if (!view.yesOrNo("Is that correct? [y/n]: ")) {
                 if (!view.yesOrNo("Make another reservation? [y/n]: ")) {
@@ -191,36 +195,27 @@ public class Controller {
             reservationList = reservationService.findAllByHost(host.getHostId(), false);
 
             if (reservationList.size() == 0) {
-                view.displayReservation(toSave, false);
+                view.displayReservation(toSave);
                 view.enterToContinue();
                 break;
             }
 
-            view.displayReservationsByHost(reservationList, false);
+            view.displayReservationsByHost(reservationList);
             view.enterToContinue();
 
         }
     }
 
     public void cancelReservation() throws DataAccessException {
-        List<Reservation> reservations = viewReservationsByState(false);
-        if (reservations == null || reservations.isEmpty()) {
-            return;
-        }
+        boolean cancelling = true;
 
 
-    }
+        while (cancelling) {
+            List<Reservation> reservationList = viewReservationsByState();
 
-    public void updateReservation() throws DataAccessException {
-        LocalDate startDate = null;
-        LocalDate endDate = null;
-        BigDecimal total;
-        Result result = new Result();
-        boolean loop = true;
-        boolean updating = true;
-
-        while (updating) {
-            List<Reservation> reservationList = viewReservationsByState(true);
+            if (reservationList == null) {
+                break;
+            }
 
             Reservation reservation = view.chooseReservation(reservationList);
 
@@ -228,7 +223,55 @@ public class Controller {
                 return;
             }
 
-            Reservation toUpdate = reservation;
+            view.displayReservation(reservation);
+
+            if (!view.yesOrNo("Delete this reservation? [y/n]: ")) {
+                if (!view.yesOrNo("Choose another reservation? [y/n]: ")) {
+                    cancelling = false;
+                    break;
+                } else {
+                    continue;
+                }
+            }
+
+            reservation.setCancelled(true);
+            Result result = reservationService.updateReservation(reservation);
+
+            if (!result.isSuccessful()) {
+                view.displayErrorMessages(result);
+                break;
+            }
+
+            cancelling = false;
+
+            reservationList = reservationService.findAllByHost(reservation.getHost().getHostId(), true);
+            view.displayReservationsByHost(reservationList);
+            view.enterToContinue();
+        }
+    }
+
+    public void updateReservation() throws DataAccessException {
+        LocalDate start = null;
+        LocalDate end = null;
+        BigDecimal total;
+        Result result = new Result();
+        boolean updating = true;
+
+        while (updating) {
+            boolean loop = true;
+            List<Reservation> reservationList = viewReservationsByState();
+
+            if (reservationList == null) {
+                break;
+            }
+
+            Reservation reservation = view.chooseReservation(reservationList);
+
+            if (reservation == null) {
+                return;
+            }
+
+            Reservation toUpdate = copyReservation(reservation);
 
             Host host = hostService.findHostById(reservation.getHost().getHostId());
 
@@ -236,25 +279,24 @@ public class Controller {
                 return;
             }
 
-
-            view.displayReservation(reservation, true);
+            view.displayReservation(reservation);
 
             while (loop) {
 
                 boolean choosingStart = true;
 
                 while (choosingStart) {
-                    startDate = view.chooseDate("Enter reservation start date [MM/DD/YYYY]: ");
-                    result = reservationService.validateStartDate(startDate);
+                    start = view.chooseDate("Enter reservation start date [MM/DD/YYYY]: ");
+                    result = reservationService.validateStartDate(start);
                     if (!result.isSuccessful()) {
                         continue;
                     }
                     choosingStart = false;
                 }
 
-                endDate = view.chooseDate("Enter reservation end date [MM/DD/YYYY]: ");
+                end = view.chooseDate("Enter reservation end date [MM/DD/YYYY]: ");
 
-                result = reservationService.validateReservationDates(startDate, endDate, host);
+                result = reservationService.validateReservationDates(start, end, host, reservation.getReservationId());
                 if (!result.isSuccessful()) {
                     view.displayErrorMessages(result);
                     continue;
@@ -263,11 +305,19 @@ public class Controller {
                 loop = false;
             }
 
-            toUpdate.setStartDate(startDate);
-            toUpdate.setEndDate(endDate);
+            toUpdate.setStartDate(start);
+            toUpdate.setEndDate(end);
+            toUpdate.setCancelled(false);
+            toUpdate.setTotal(view.calculateStayCost(toUpdate));
 
-            view.displayReservation(reservation, true);
-            view.displayReservation(toUpdate, true);
+            view.displayHeader("[ ORIGINAL DATES ]");
+            view.displayReservation(reservation);
+            view.displayStayCost(reservation);
+            view.printLine("");
+            view.displayHeader("[ NEW DATES ]");
+            view.displayReservation(toUpdate);
+            view.displayStayCost(toUpdate);
+
             if (!view.yesOrNo("Is this correct? [y/n]: ")) {
                 if (!view.yesOrNo("Edit another reservation? [y/n]: ")) {
                     updating = false;
@@ -277,13 +327,32 @@ public class Controller {
                 }
             }
 
-            reservation.setStartDate(startDate);
-            reservation.setEndDate(endDate);
-            reservation.setCancelled(false);
+            result = reservationService.updateReservation(toUpdate);
 
+            if (!result.isSuccessful()) {
+                view.displayErrorMessages(result);
+                break;
+            }
 
+            if (!view.yesOrNo("Successfully updated. View new reservation list? [y/n]: ")) {
+                if (!view.yesOrNo("Edit another reservation? [y/n]: ")) {
+                    updating = false;
+                    return;
+                } else {
+                    continue;
+                }
+            }
 
+            List<Reservation> displayList = reservationService.findAllByHost(host.getHostId(), false);
 
+            view.displayReservationsByHost(displayList);
+
+            if (!view.yesOrNo("Edit another reservation? [y/n]: ")) {
+                updating = false;
+                return;
+            } else {
+                continue;
+            }
         }
     }
 
@@ -338,6 +407,19 @@ public class Controller {
         }
 
         return host;
+    }
+
+    public Reservation copyReservation(Reservation reservation) {
+        Reservation res = new Reservation();
+        res.setHost(reservation.getHost());
+        res.setReservationId(reservation.getReservationId());
+        res.setStartDate(reservation.getStartDate());
+        res.setEndDate(reservation.getEndDate());
+        res.setGuest(reservation.getGuest());
+        res.setTotal(reservation.getTotal());
+
+
+        return res;
     }
 
 }

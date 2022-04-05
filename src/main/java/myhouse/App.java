@@ -13,6 +13,8 @@ public class App {
 
     public static void main(String[] args) throws DataAccessException {
 
+        // Main App Class
+
         ApplicationContext context = new AnnotationConfigApplicationContext(App.class);
 
         Controller controller = context.getBean(Controller.class);

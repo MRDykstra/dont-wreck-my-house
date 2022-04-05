@@ -6,6 +6,8 @@ import java.util.List;
 
 public interface GuestRepository {
 
+    // Interface for Guest Repository
+
     public List<Guest> findAll() throws DataAccessException;
 
     public Guest findById(int guestId) throws DataAccessException;

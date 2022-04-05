@@ -19,6 +19,8 @@ import java.util.UUID;
 @Component
 public class Controller {
 
+    // Controller
+
     private final View view;
     private final ReservationService reservationService;
     private final HostService hostService;

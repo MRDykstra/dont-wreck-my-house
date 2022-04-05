@@ -1,25 +1,20 @@
 package myhouse.data;
 
 import myhouse.models.Host;
-import myhouse.models.Reservation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
 import java.io.*;
 import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Repository
 public class HostFileRepository implements HostRepository {
+
+    // Host Repository
 
     private final String filePath;
 

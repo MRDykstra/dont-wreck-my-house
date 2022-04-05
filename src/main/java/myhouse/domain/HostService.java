@@ -12,6 +12,8 @@ import java.util.UUID;
 @Service
 public class HostService {
 
+    // Host Service
+
     private final HostRepository repo;
 
     public HostService(HostRepository repo) {

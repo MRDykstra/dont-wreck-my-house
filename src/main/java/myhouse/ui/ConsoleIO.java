@@ -11,6 +11,8 @@ import java.util.Scanner;
 @Component
 public class ConsoleIO {
 
+    // Console IO
+
     private final Scanner scanner = new Scanner(System.in);
     private DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("MM/dd/yyyy");
 

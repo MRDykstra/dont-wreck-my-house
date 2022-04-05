@@ -21,6 +21,8 @@ import java.util.stream.Stream;
 @Repository
 public class ReservationFileRepository implements ReservationRepository {
 
+    // Reservation Repository
+
     private final String directoryPath;
     private final HostFileRepository hostRepo;
     private final GuestFileRepository guestRepo;

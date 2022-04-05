@@ -19,6 +19,8 @@ import static java.time.temporal.ChronoUnit.DAYS;
 @Component
 public class View {
 
+    // View
+
     private final ConsoleIO io;
 
     public View(ConsoleIO io) {

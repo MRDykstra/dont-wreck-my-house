@@ -3,11 +3,12 @@ package myhouse.data;
 import myhouse.models.Reservation;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
 public interface ReservationRepository {
+
+    // Interface for the Reservation Repository
 
     List<File> createListOfReservations();
 
